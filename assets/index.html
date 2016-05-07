@@ -20,24 +20,27 @@
             color: #a3a3a3;
             cursor: pointer;
             display: block;
-            padding: 10px 15px;
-            margin: 0 0 2px 0;
-            background: #1d1d1d;
+            padding: 6px 15px;
+            margin: 0 0 1px 0;
+            background: #2B2B2B;
             position: relative;
         }
         #sidebar > a.active {
-            background: #282829;
+            background: #004000;
         }
         #sidebar a:hover {
             background: #282829;
+        }
+        #sidebar > a.active:hover {
+            background: #004000;
         }
         #sidebar a span {
             position: absolute;
             color: white;
             background: #389A38;
-            right: 10px;
+            right: 7px;
             font-size: 12px;
-            top: 11px;
+            top: 6px;
             border-radius: 6px;
             padding: 2px 4px;
         }
@@ -96,6 +99,8 @@
             background: #232323;
         }
     </style>
+
+    <link rel="icon" href="favicon.ico">
 </head>
 <body>
     <div id="sidebar"></div>
@@ -103,7 +108,7 @@
     <div id="status"></div>
     <script>
         var UI = {
-            address: "ws://localhost:{port}/ws",
+            address: "ws://localhost:8080/ws",
             limitLogs: 1000,
             totalUnread: 0,
             init: function() {

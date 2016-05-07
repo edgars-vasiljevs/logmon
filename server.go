@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"golang.org/x/net/websocket"
 	"net/http"
-	"strings"
 )
 
 const HOST string = "127.0.0.1"
@@ -13,7 +11,8 @@ const PORT string = "8080"
 var clients []*websocket.Conn
 
 var publicFiles = map[string]string{
-	"assets/index.html": "/",
+	"assets/index.html":  "/",
+	"assets/favicon.ico": "/favicon.ico",
 }
 
 type LogPreload struct {
@@ -65,10 +64,12 @@ func NewWebSocketServer(config Config, logs <-chan LogMessage) {
 func NewHTTPServer() {
 
 	for file, path := range publicFiles {
-		http.HandleFunc(path, func(w http.ResponseWriter, req *http.Request) {
-			assetContent, _ := Asset(file)
-			fmt.Fprint(w, strings.Replace(string(assetContent), "{port}", PORT, -1))
-		})
+		content, _ := Asset(file)
+		func(path string, content []byte) {
+			http.HandleFunc(path, func(w http.ResponseWriter, req *http.Request) {
+				w.Write(content)
+			})
+		}(path, content)
 	}
 
 	Print("Listening on http://" + HOST + ":" + PORT + "/")

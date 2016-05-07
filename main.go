@@ -22,11 +22,11 @@ func main() {
 	// Start file monitoring
 	go NewFileMonitor(config, logs)
 
-	// Start HTTP server
-	go NewHTTPServer()
-
 	// Start a TCP socket server
 	go NewWebSocketServer(config, logs)
+
+	// Start HTTP server
+	go NewHTTPServer()
 
 	// Block
 	select {}
