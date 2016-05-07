@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>logmon</title>
+    <style>
+        body {
+            background: #000; /*#191919; */
+            font-family: "Droid Sans", sans-serif;
+        }
+        #sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background: #191919;
+            padding: 10px 0 0 0;
+        }
+        #sidebar > a {
+            color: #a3a3a3;
+            cursor: pointer;
+            display: block;
+            padding: 10px 15px;
+            margin: 0 0 2px 0;
+            background: #1d1d1d;
+            position: relative;
+        }
+        #sidebar > a.active {
+            background: #282829;
+        }
+        #sidebar a:hover {
+            background: #282829;
+        }
+        #sidebar a span {
+            position: absolute;
+            color: white;
+            background: #389A38;
+            right: 10px;
+            font-size: 12px;
+            top: 11px;
+            border-radius: 6px;
+            padding: 2px 4px;
+        }
+        #sidebar a span:empty {
+            display: none;
+        }
+        #content {
+            position: absolute;
+            top: 0;
+            left: 250px;
+            right: 0;
+            bottom: 0;
+            font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+            font-size: 14px;
+        }
+        #content > div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: auto;
+            padding: 5px;
+            white-space: nowrap;
+            visibility: hidden;
+        }
+        #content > div.active {
+            visibility: visible;
+        }
+        #content > div > div {
+            display: block;
+            color: #389A38;
+            padding: 0 0 1px 0;
+            white-space: pre;
+        }
+        #status {
+            height: 10px;
+            background: red;
+            position: absolute;
+            top: 0;
+            width: 250px;
+            left: 0;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;  /* for vertical scrollbars */
+            height: 10px; /* for horizontal scrollbars */
+        }
+        ::-webkit-scrollbar-track {
+            background: #232323;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #389A38;
+        }
+        ::-webkit-scrollbar-corner {
+            background: #232323;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div id="content"></div>
+    <div id="status"></div>
+    <script>
+        var UI = {
+            address: "ws://localhost:{port}/ws",
+            limitLogs: 1000,
+            totalUnread: 0,
+            init: function() {
+                this.socket = new WebSocket(this.address);
+
+                this.socket.onopen = this.onOpen.bind(this);
+                this.socket.onmessage = this.onMessage.bind(this);
+                this.socket.onclose = this.onClose.bind(this);
+
+                this.dom = {};
+                this.dom.sidebar = document.getElementById('sidebar');
+                this.dom.content = document.getElementById('content');
+
+                document.onkeydown = function(e) {
+                    var code = e.keyCode || e.which;
+                    if (code == 27) {
+                        var a = this.dom.sidebar.querySelector("#sidebar a.active"),
+                            w = this.windows[a.getAttribute('data-name')];
+
+                        w.innerHTML = '';
+                    }
+                }.bind(this)
+            },
+            status: {
+                dom: document.getElementById('status'),
+                green: function() {
+                    this.dom.style.background = 'green';
+                },
+                red: function() {
+                    this.dom.style.background = 'red';
+                }
+            },
+            onOpen: function(e) {
+                if (this.reconnectInterval) {
+                    clearInterval(this.reconnectInterval);
+                    delete this.reconnectInterval;
+                }
+
+                this.status.green();
+            },
+            onMessage: function(e) {
+                var json = JSON.parse(e.data);
+
+                if (json.files) {
+                    this.dom.sidebar.innerHTML = '';
+                    return this.initStreams(json.files)
+                }
+                else if (json.n) {
+                    var w = this.windows[json.n],
+                        d = document.createElement('div');
+
+                    json.c = json.c
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#039;");
+
+                    d.innerHTML = json.c;
+                    w.appendChild(d);
+
+                    // Scroll to bottom
+                    w.scrollTop = w.scrollHeight;
+
+                    // Clean up logs
+                    this._cleanUp(json.n);
+
+                    if (!w.isActive) {
+                        this.totalUnread++;
+                        w.unread++;
+                        w.sidebarHandle.querySelector('span').innerHTML = w.unread;
+                    }
+                }
+
+                this._updateTitle();
+            },
+            _updateTitle: function() {
+
+                this.totalUnread = 0;
+
+                // Hide all windows
+                for (var key in this.windows) {
+                    if (this.windows.hasOwnProperty(key)) {
+                        this.totalUnread += this.windows[key].unread;
+                    }
+                }
+
+                if (this.totalUnread == 0) {
+                    document.title = 'logmon';
+                }
+                else {
+                    document.title = 'logmon (' + this.totalUnread + ')';
+                }
+            },
+            _cleanUp: function(name) {
+                var windows = this.windows[name].querySelectorAll('div');
+                if (windows.length > this.limitLogs) {
+                    for (var i = 0; i <= (windows.length - this.limitLogs); i++) {
+                        windows[i].parentNode.removeChild(windows[i]);
+                    }
+                }
+            },
+            onClose: function(e) {
+                this.status.red();
+                this.reconnect();
+            },
+            reconnect: function() {
+                if (this.reconnectInterval) {
+                    return
+                }
+
+                this.reconnectInterval = setInterval(function() {
+                    this.socket = new WebSocket(this.address);
+                    this.socket.onopen = this.onOpen.bind(this);
+                    this.socket.onmessage = this.onMessage.bind(this);
+                    this.socket.onclose = this.onClose.bind(this);
+                }.bind(this), 1000);
+            },
+            initStreams: function(files) {
+                this.windows = {};
+                this.dom.sidebar.innerHTML = '';
+                this.dom.content.innerHTML = '';
+
+                files.forEach(function(file, i) {
+
+                    var id = file[0].replace(/[ \.]+/, '-');
+
+                    // Create sidebar handle
+                    var item = document.createElement('a');
+                    item.innerHTML = file[0] + '<span></span>';
+                    item.id = 's_' + id;
+                    item.setAttribute('data-name', file[0]);
+                    this.dom.sidebar.appendChild(item);
+
+                    // Create log window
+                    var logWindow = document.createElement('div');
+                    logWindow.id = 'w_' + id;
+                    logWindow.unread = 0;
+                    logWindow.isActive = false;
+                    logWindow.sidebarHandle = item;
+
+                    this.dom.content.appendChild(logWindow);
+
+                    this.windows[file[0]] = logWindow;
+
+                    // Bind click event
+                    item.onclick = function(e) {
+
+                        // Hide all windows
+                        for (var key in this.windows) {
+                            if (this.windows.hasOwnProperty(key)) {
+                                this.windows[key].className = '';
+                                this.windows[key].isActive = false;
+                            }
+                        }
+
+                        // Remove active sidebar item
+                        var anchors = document.querySelectorAll("#sidebar a");
+                        [].forEach.call(anchors, function(a) {
+                            a.className = '';
+                        });
+
+                        // Activate new window
+                        e.target.className = 'active';
+                        e.target.querySelector('span').innerHTML = '';
+
+                        logWindow.className = 'active';
+                        logWindow.unread = 0;
+                        logWindow.isActive = true;
+
+                        this._updateTitle();
+                    }.bind(this);
+                }.bind(this));
+
+                // Activate first window
+                document.querySelectorAll("#sidebar a")[0].click();
+            }
+        };
+
+        window.onload = UI.init.bind(UI);
+    </script>
+</body>
+</html>
