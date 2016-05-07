@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/hpcloud/tail"
 	"os"
 	"regexp"
-	"github.com/hpcloud/tail"
 )
 
 type LogMessage struct {
@@ -14,7 +14,7 @@ type LogMessage struct {
 // Local file monitoring
 func LocalFileMonitor(item []string, logs chan<- LogMessage) {
 
-	var err error;
+	var err error
 
 	_, err = os.Stat(item[1])
 	if os.IsNotExist(err) {

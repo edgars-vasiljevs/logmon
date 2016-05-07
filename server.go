@@ -41,7 +41,9 @@ func NewWebSocketServer(config Config, logs <-chan LogMessage) {
 
 		// Wait for lost connection
 		for deadWs := range endChan {
-			if deadWs == ws { break }
+			if deadWs == ws {
+				break
+			}
 		}
 	}))
 
@@ -70,7 +72,7 @@ func NewHTTPServer() {
 	}
 
 	Print("Listening on http://" + HOST + ":" + PORT + "/")
-	err := http.ListenAndServe(HOST + ":" + PORT, nil)
+	err := http.ListenAndServe(HOST+":"+PORT, nil)
 
 	if err != nil {
 		Print(err)
