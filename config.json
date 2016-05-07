@@ -1,4 +1,0 @@
-[
-    ["syslog", "/var/log/syslog"],
-    ["level access", "/home/edgars/Projects/redbox/logs/level/access_log"]
-]
