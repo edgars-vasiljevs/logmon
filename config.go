@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"io/ioutil"
 	"os"
 )
@@ -31,33 +30,23 @@ func (c Config) createDefaultConfig() error {
 	return nil
 }
 
-// Parses cli flag and overrides default config name
-func (c *Config) parseFlags() bool {
-	customConfig := flag.String("config", "", "Specify configuration file to use")
-	// Parse cli flags
-	flag.Parse()
-	// Override default config file
-	if *customConfig != "" {
-		c.configFile = *customConfig
-		return true
-	}
-	return false
-}
-
 // Load configuration from json file
 func (c *Config) load() error {
-	// Check if default config file is overwritten in cli flags
-	if c.parseFlags() == false {
-		// Check if default config file exists.
-		// If not, create empty one from template
-		if _, err := os.Stat(c.configFile); os.IsNotExist(err) {
-			err := c.createDefaultConfig()
-			if err != nil {
-				return err
-			}
-			// Mark config as new so it's not loaded right away
-			c.new = true
+
+	// Check if default config path is overwritten using flag
+	if Flags.Config != "" {
+		c.configFile = Flags.Config
+	}
+
+	// Check if default config file exists.
+	// If not, create empty one from template
+	if _, err := os.Stat(c.configFile); os.IsNotExist(err) {
+		err := c.createDefaultConfig()
+		if err != nil {
+			return err
 		}
+		// Mark config as new so it's not loaded right away
+		c.new = true
 	}
 
 	data, err := ioutil.ReadFile(c.configFile)

@@ -5,9 +5,6 @@ import (
 	"net/http"
 )
 
-const HOST string = "127.0.0.1"
-const PORT string = "8080"
-
 var clients []*websocket.Conn
 
 var publicFiles = map[string]string{
@@ -72,8 +69,8 @@ func NewHTTPServer() {
 		}(path, content)
 	}
 
-	Print("Listening on http://%s:%s/", HOST, PORT)
-	err := http.ListenAndServe(HOST+":"+PORT, nil)
+	Print("Listening on http://%s:%s/", Flags.Host, Flags.Port)
+	err := http.ListenAndServe(Flags.Host+":"+Flags.Port, nil)
 
 	if err != nil {
 		Print(err)

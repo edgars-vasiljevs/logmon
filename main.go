@@ -1,6 +1,9 @@
 package main
 
+var Flags FlagsConfig = NewFlagsConfig()
+
 func main() {
+
 	// Main channel for logs
 	logs := make(chan LogMessage)
 
