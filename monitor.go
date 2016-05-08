@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/hpcloud/tail"
 	"golang.org/x/crypto/ssh"
 	"os"
@@ -18,7 +17,7 @@ func LocalFileMonitor(item []string, logs chan<- LogMessage) {
 
 	_, err = os.Stat(item[1])
 	if os.IsNotExist(err) {
-		Print("File " + item[1] + " does not exist")
+		Print("File %s does not exist", item[1])
 		return
 	}
 
@@ -28,7 +27,7 @@ func LocalFileMonitor(item []string, logs chan<- LogMessage) {
 	})
 
 	if err != nil {
-		Print("Could not open: " + item[1] + ". " + err.Error())
+		Print("Could not open: %s. %s", item[1], err.Error())
 		return
 	}
 
@@ -57,20 +56,22 @@ func RemoteFileMonitor(item []string, logs chan<- LogMessage) {
 		address = append(address, "22")
 	}
 
+	finalAddress := strings.Join(address, ":")
+
 	// Connect to SSH server
-	connection, err := ssh.Dial("tcp", strings.Join(address, ":"), &sshConfig)
+	connection, err := ssh.Dial("tcp", finalAddress, &sshConfig)
 	if err != nil {
-		Print(fmt.Sprintf("Failed to dial SSH: %s", err))
+		Print("Failed to dial SSH: %s", err)
 		return
 	}
 
 	// Print out success message
-	Print(fmt.Sprintf("Connected to %s@%s (%s)", auth[0], strings.Join(address, ":"), sshSplit[3]))
+	Print("Connected to %s@%s (%s)", auth[0], finalAddress, sshSplit[3])
 
 	// Create new session
 	session, err := connection.NewSession()
 	if err != nil {
-		Print(fmt.Sprintf("Failed to create SSH session: %s", err))
+		Print("Failed to create SSH session: %s", err)
 		return
 	}
 

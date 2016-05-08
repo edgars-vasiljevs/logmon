@@ -72,7 +72,7 @@ func NewHTTPServer() {
 		}(path, content)
 	}
 
-	Print("Listening on http://" + HOST + ":" + PORT + "/")
+	Print("Listening on http://%s:%s/", HOST, PORT)
 	err := http.ListenAndServe(HOST+":"+PORT, nil)
 
 	if err != nil {

@@ -4,6 +4,6 @@ import (
 	"fmt"
 )
 
-func Print(msg interface{}) {
-	fmt.Printf("[logmon] %s\n", msg)
+func Print(arguments ...interface{}) {
+	fmt.Printf(fmt.Sprintf("logmon: %s\n", arguments[0]), arguments[1:]...)
 }

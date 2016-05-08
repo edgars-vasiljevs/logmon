@@ -17,7 +17,7 @@ func main() {
 		return
 	}
 
-	Print("Using " + config.configFile + " configuration file.")
+	Print("Using %s configuration file.", config.configFile)
 
 	// Start file monitoring
 	go NewFileMonitor(config, logs)
