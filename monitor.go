@@ -42,14 +42,12 @@ func RemoteFileMonitor(item []string, logs chan<- LogMessage) {
 	sshSplit := regexp.MustCompile(`([^@]+)@([^:]+(?::\d+|)):(.+)$`).FindStringSubmatch(item[1])
 
 	auth := strings.Split(sshSplit[1], ":")
-	sshConfig := ssh.ClientConfig{}
+	sshConfig := ssh.ClientConfig{User: auth[0]}
 
 	if len(auth) == 2 {
-		sshConfig.User = auth[0]
 		sshConfig.Auth = []ssh.AuthMethod{ssh.Password(auth[1])}
 	} else {
-		// TODO: pub key
-		sshConfig.User = auth[0]
+		// TODO: key
 	}
 
 	address := strings.Split(sshSplit[2], ":")
@@ -65,6 +63,9 @@ func RemoteFileMonitor(item []string, logs chan<- LogMessage) {
 		Print(fmt.Sprintf("Failed to dial SSH: %s", err))
 		return
 	}
+
+	// Print out success message
+	Print(fmt.Sprintf("Connected to %s@%s (%s)", auth[0], strings.Join(address, ":"), sshSplit[3]))
 
 	// Create new session
 	session, err := connection.NewSession()
