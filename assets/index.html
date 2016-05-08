@@ -86,8 +86,8 @@
             left: 0;
         }
         ::-webkit-scrollbar {
-            width: 10px;  /* for vertical scrollbars */
-            height: 10px; /* for horizontal scrollbars */
+            width: 13px;
+            height: 13px;
         }
         ::-webkit-scrollbar-track {
             background: #232323;
@@ -108,11 +108,13 @@
     <div id="status"></div>
     <script>
         var UI = {
-            address: "ws://localhost:8080/ws",
-            limitLogs: 1000,
+            limitLogs: 3000,
             totalUnread: 0,
             init: function() {
-                this.socket = new WebSocket(this.address);
+                var port = window.document.location.port
+                        ? window.document.location.port : 80;
+
+                this.socket = new WebSocket("ws://localhost:" + port + "/ws");
 
                 this.socket.onopen = this.onOpen.bind(this);
                 this.socket.onmessage = this.onMessage.bind(this);
@@ -150,31 +152,32 @@
                 this.status.green();
             },
             onMessage: function(e) {
+
                 var json = JSON.parse(e.data);
 
                 if (json.files) {
                     this.dom.sidebar.innerHTML = '';
                     return this.initStreams(json.files)
                 }
-                else if (json.n) {
-                    var w = this.windows[json.n],
+                else {
+                    var w = this.windows[json[0]],
                         d = document.createElement('div');
 
-                    json.c = json.c
+                    json[1] = json[1]
                             .replace(/&/g, "&amp;")
                             .replace(/</g, "&lt;")
                             .replace(/>/g, "&gt;")
                             .replace(/"/g, "&quot;")
                             .replace(/'/g, "&#039;");
 
-                    d.innerHTML = json.c;
+                    d.innerHTML = json[1];
                     w.appendChild(d);
 
                     // Scroll to bottom
                     w.scrollTop = w.scrollHeight;
 
                     // Clean up logs
-                    this._cleanUp(json.n);
+                    this._cleanUp(json[0]);
 
                     if (!w.isActive) {
                         this.totalUnread++;

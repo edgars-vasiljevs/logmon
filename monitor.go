@@ -6,10 +6,7 @@ import (
 	"regexp"
 )
 
-type LogMessage struct {
-	Name    string `json:"n"`
-	Content string `json:"c"`
-}
+type LogMessage [2]string
 
 // Local file monitoring
 func LocalFileMonitor(item []string, logs chan<- LogMessage) {
@@ -24,7 +21,6 @@ func LocalFileMonitor(item []string, logs chan<- LogMessage) {
 
 	file, err := tail.TailFile(item[1], tail.Config{
 		Follow: true,
-		//Location: &tail.SeekInfo{0, 2},
 		Logger: tail.DiscardingLogger,
 	})
 

@@ -11,12 +11,6 @@ import (
 const defaultConfig string = "config.json"
 const defaultConfigTemplate string = "assets/config-template.json"
 
-type JSONConfig struct {
-	Address   string     `json:"address"`
-	PublicKey string     `json:"publickey,omitempty"`
-	Logs      [][]string `json:"logs,omitempty"`
-}
-
 type Config struct {
 	configFile     string
 	configTemplate string
