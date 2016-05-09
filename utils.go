@@ -10,7 +10,7 @@ type FlagsConfig struct {
 }
 
 func (c *FlagsConfig) ParseFlags() {
-	config := (flag.String("config", "config.json", "Specify configuration file to use"))
+	config := flag.String("config", "config.json", "Specify configuration file to use")
 	host := flag.String("host", "127.0.0.1", "Local server address")
 	port := flag.String("port", "8080", "Local server port")
 
